@@ -3,6 +3,7 @@ package com.example.hashirun.repository;
 import com.example.hashirun.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
 //「これはDBへのアクセスを担当するクラスですよ」という印。
 @Repository
 // extends JpaRepository<User, Long> の正体
