@@ -3,6 +3,7 @@ package com.example.hashirun.repository;
 import com.example.hashirun.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 //「これはDBへのアクセスを担当するクラスですよ」という印。
 @Repository
@@ -16,4 +17,7 @@ import org.springframework.stereotype.Repository;
 // findById(id)：IDで1人探す（SELECT ... WHERE id = ?）
 // deleteById(id)：削除する（DELETE）
 public interface UserRepository extends JpaRepository<User, Long> {
+    // DBにemailと同じmailがいるかどうかを判断するメソッド
+    // User型とNUllも許容するための型定義
+    Optional<User> findByEmail(String email);
 }
