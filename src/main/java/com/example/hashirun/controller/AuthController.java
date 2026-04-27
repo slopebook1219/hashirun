@@ -2,7 +2,11 @@ package com.example.hashirun.controller;
 
 import com.example.hashirun.entity.User;
 import com.example.hashirun.service.UserService;
+
 import lombok.RequiredArgsConstructor;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 //API専用であることの宣言
@@ -26,9 +30,24 @@ public class AuthController {
     @PostMapping("/register")
     // UserEntitiyの型に自動で詰め替えれる
     public String register(@RequestBody User user) {
-        System.out.println(user);
         // 届いたデータをService（職人）に渡して登録してもらう
         userService.registerUser(user);
         return "ユーザー登録が完了しました！";
+    }
+
+    @PostMapping("/login")
+    // 戻り値の型を Map から ResponseEntity<?> に変更する
+    public ResponseEntity<?> login(@RequestBody User user) {
+
+        String token = userService.login(user.getEmail(), user.getPassword());
+
+        if (token != null) {
+            // OK（200）とトークンを返す
+            return ResponseEntity.ok(Map.of("token", token));
+        } else {
+            // 401エラーとメッセージを返す
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("メールアドレスかパスワードが違います");
+        }
     }
 }

@@ -1,29 +1,35 @@
 package com.example.hashirun.config;
 
+import com.example.hashirun.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private final JwtAuthenticationFilter jwtAuthenticationFilter; // 1. 改札機を呼ぶ
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Next.js（外部）からのPOST送信を許可するために、一旦CSRF保護を無効化します
-            .csrf(csrf -> csrf.disable())
-            // 全てのリクエストを「認証なし（ログインなし）」で通す設定（まずは動かすため）
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
+                .csrf(csrf -> csrf.disable()) // APIなのでCSRFはオフ
+                // 2. 「ステートレス」に設定（サーバーにセッションを保存しない。トークン方式の鉄則！）
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll() // ログインや登録は誰でもOK
+                        .anyRequest().authenticated() // それ以外は「改札（トークン）」が必要！
+                );
+
+        // 3. 改札機（jwtAuthenticationFilter）を、標準の認証チェックの前に割り込ませる
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
